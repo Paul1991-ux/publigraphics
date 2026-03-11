@@ -1,0 +1,30 @@
+# Claude Code session data
+.claude/
+
+# R
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+*.Rproj
+
+# Node
+node_modules/
+dist/
+*.tgz
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts
+*.o
+*.so
+*.dll
+
+# Temp/editor files
+*~
+*.swp
+*.swo
+\#*\#
