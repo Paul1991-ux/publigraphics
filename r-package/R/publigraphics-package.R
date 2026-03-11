@@ -16,6 +16,7 @@
 #'   cli_alert_warning cli_alert_danger cli_progress_bar
 #'   cli_progress_update cli_progress_done cli_ul cli_bullets
 #' @importFrom readr read_csv
+#' @importFrom tidyr replace_na
 #' @importFrom forcats fct_reorder fct_infreq
 #' @importFrom lubridate year today
 #' @importFrom fs dir_create file_exists path

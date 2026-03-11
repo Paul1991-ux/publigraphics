@@ -15,12 +15,18 @@ output:
     self_contained: true
 params:
   author_name: ""
-  data: NULL
-  viz_list: NULL
-  stats: NULL
-  cover_html: ""
+  affiliation: ""
   theme_color: "#1B4F72"
-  lang: "fr"
+  language: "fr"
+  cover_html: ""
+  data: NULL
+  summary_table: NULL
+  narratives: NULL
+  viz_dir: ""
+  viz_paths: NULL
+  stats_list: NULL
+  sii_result: NULL
+  sii_card_html: ""
 ---
 
 ```{r setup, include=FALSE}
@@ -37,15 +43,25 @@ knitr::opts_chunk$set(
 
 # --- Bilingual header helper ------------------------------------------------
 h <- function(fr, en) {
-
-  if (identical(params$lang, "fr")) fr else en
+  if (identical(params$language, "fr")) fr else en
 }
 
 # --- Unpack parameters -------------------------------------------------------
-viz    <- params$viz_list
-stats  <- params$stats
-data   <- params$data
-color  <- params$theme_color
+data       <- params$data
+color      <- params$theme_color
+viz_paths  <- params$viz_paths
+stats_list <- params$stats_list
+sii_result <- params$sii_result
+
+# --- Helper: include a viz image if it exists --------------------------------
+include_viz <- function(filename) {
+  if (!is.null(viz_paths) && filename %in% names(viz_paths)) {
+    path <- viz_paths[[filename]]
+    if (file.exists(path)) {
+      knitr::include_graphics(path)
+    }
+  }
+}
 ```
 
 ```{css, echo=FALSE}
@@ -72,15 +88,15 @@ color  <- params$theme_color
 
 <div class="pg-stats-grid">
 ```{r stats-cards, results='asis'}
-if (!is.null(stats)) {
-  labels <- if (identical(params$lang, "fr")) {
+if (!is.null(stats_list)) {
+  labels <- if (identical(params$language, "fr")) {
     c("Articles", "Ouvrages", "S\u00e9minaires", "Projets", "Th\u00e8ses", "Prix")
   } else {
     c("Articles", "Books", "Seminars", "Projects", "Theses", "Awards")
   }
   values <- c(
-    stats$n_articles, stats$n_books, stats$n_seminars,
-    stats$n_projects, stats$n_theses, stats$n_awards
+    stats_list$Articles, stats_list$Books, stats_list$Seminars,
+    stats_list$Projects, stats_list$Theses, stats_list$Awards
   )
   for (i in seq_along(labels)) {
     cat(sprintf(
@@ -95,70 +111,85 @@ if (!is.null(stats)) {
 ```
 </div>
 
-### `r h("Profil de recherche", "Research Profile")`
-
-```{r radar-chart, fig.cap=h("Radar du profil acad\u00e9mique", "Academic profile radar")}
-if (!is.null(viz$radar)) {
-  viz$radar
-}
+```{r wordcloud-overview, fig.cap=h("Mots-cl\u00e9s des articles", "Article keywords")}
+include_viz("wordcloud_articles.png")
 ```
 
-### `r h("\u00c9volution temporelle", "Temporal Evolution")`
-
-```{r temporal-evolution, fig.cap=h("\u00c9volution des publications", "Publication evolution")}
-if (!is.null(viz$temporal_evolution)) {
-  viz$temporal_evolution
-}
+```{r timeline-overview, fig.cap=h("Chronologie des publications", "Publication timeline")}
+include_viz("timeline_articles.png")
 ```
 
 <div class="pg-page-break"></div>
 
 <!-- ======================================================================= -->
-<!-- SECTION 3 : ARTICLES                                                    -->
+<!-- SECTION 3 : SCIENTIFIC INFLUENCE INDEX (SII)                            -->
+<!-- ======================================================================= -->
+
+## `r h("Indice d'Influence Scientifique", "Scientific Influence Index")` {.pg-section}
+
+```{r sii-card, results='asis'}
+if (nchar(params$sii_card_html) > 0) {
+  cat(params$sii_card_html)
+}
+```
+
+```{r sii-radar, fig.cap=h("Radar multidimensionnel SII", "SII multi-dimensional radar")}
+include_viz("sii_radar.png")
+```
+
+```{r sii-evolution, fig.cap=h("\u00c9volution temporelle du SII", "SII temporal evolution")}
+include_viz("sii_evolution.png")
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 4 : ARTICLES                                                    -->
 <!-- ======================================================================= -->
 
 ## `r h("Articles", "Articles")` {.pg-section}
 
-### `r h("Nuage de mots-cl\u00e9s", "Keyword Cloud")`
-
-```{r wordcloud, fig.cap=h("Mots-cl\u00e9s des articles", "Article keywords")}
-if (!is.null(viz$wordcloud)) {
-  viz$wordcloud
-}
-```
-
-### `r h("Chronologie des articles", "Article Timeline")`
-
-```{r article-timeline, fig.cap=h("Chronologie des publications", "Publication timeline")}
-if (!is.null(viz$article_timeline)) {
-  viz$article_timeline
-}
-```
-
 ### `r h("Top 5 des articles", "Top 5 Articles")`
 
 ```{r top-articles, results='asis'}
-if (!is.null(data$articles)) {
-  top5 <- head(data$articles, 5)
-  for (i in seq_len(nrow(top5))) {
-    row <- top5[i, ]
-    year_badge <- sprintf(
-      '<span class="pg-badge" style="background-color: %s; color: #fff;">%s</span>',
-      color, row$year
-    )
-    journal_text <- if (!is.null(row$journal) && nchar(row$journal) > 0) {
-      sprintf('<em>%s</em>', row$journal)
+if (!is.null(data)) {
+  articles <- data[data$type_classified == "article", ]
+  if (nrow(articles) > 0) {
+    # Sort by cited_by descending, then by year descending
+    if ("cited_by" %in% names(articles)) {
+      articles <- articles[order(-articles$cited_by, -articles$year), ]
     } else {
-      ""
+      articles <- articles[order(-articles$year), ]
     }
-    cat(sprintf(
-      '<div class="pg-article-card" style="border-left-color: %s;">
-         <h4>%s %s</h4>
-         <p>%s</p>
-         <p>%s</p>
-       </div>\n',
-      color, row$title, year_badge, row$authors, journal_text
-    ))
+    top5 <- head(articles, 5)
+    for (i in seq_len(nrow(top5))) {
+      row <- top5[i, ]
+      year_badge <- sprintf(
+        '<span class="pg-badge" style="background-color: %s; color: #fff;">%s</span>',
+        color, row$year
+      )
+      cited_badge <- ""
+      if ("cited_by" %in% names(row) && !is.na(row$cited_by) && row$cited_by > 0) {
+        cited_badge <- sprintf(
+          '<span class="pg-badge-outline">%s citations</span>',
+          row$cited_by
+        )
+      }
+      journal_text <- if ("journal" %in% names(row) && !is.na(row$journal) &&
+                          nchar(as.character(row$journal)) > 0) {
+        sprintf('<em>%s</em>', row$journal)
+      } else {
+        ""
+      }
+      cat(sprintf(
+        '<div class="pg-article-card" style="border-left-color: %s;">
+           <h4>%s %s %s</h4>
+           <p>%s</p>
+           <p>%s</p>
+         </div>\n',
+        color, row$title, year_badge, cited_badge, row$authors, journal_text
+      ))
+    }
   }
 }
 ```
@@ -166,7 +197,7 @@ if (!is.null(data$articles)) {
 <div class="pg-page-break"></div>
 
 <!-- ======================================================================= -->
-<!-- SECTION 4 : BOOKS                                                       -->
+<!-- SECTION 5 : BOOKS                                                       -->
 <!-- ======================================================================= -->
 
 ## `r h("Ouvrages", "Books")` {.pg-section}
@@ -174,23 +205,19 @@ if (!is.null(data$articles)) {
 ### `r h("Galerie des ouvrages", "Book Gallery")`
 
 ```{r book-gallery, fig.cap=h("Galerie des ouvrages", "Book gallery")}
-if (!is.null(viz$book_gallery)) {
-  viz$book_gallery
-}
+include_viz("gallery_books.png")
 ```
 
 ### `r h("R\u00e9seau de co-autorat", "Co-authorship Network")`
 
 ```{r coauthorship-network, fig.cap=h("R\u00e9seau de co-autorat", "Co-authorship network")}
-if (!is.null(viz$coauthorship_network)) {
-  viz$coauthorship_network
-}
+include_viz("network_coauthors.png")
 ```
 
 <div class="pg-page-break"></div>
 
 <!-- ======================================================================= -->
-<!-- SECTION 5 : SEMINARS                                                    -->
+<!-- SECTION 6 : SEMINARS                                                    -->
 <!-- ======================================================================= -->
 
 ## `r h("S\u00e9minaires & Conf\u00e9rences", "Seminars & Conferences")` {.pg-section}
@@ -198,23 +225,19 @@ if (!is.null(viz$coauthorship_network)) {
 ### `r h("Carte des interventions", "Presentation Map")`
 
 ```{r seminar-map, fig.cap=h("Localisation des s\u00e9minaires", "Seminar locations")}
-if (!is.null(viz$seminar_map)) {
-  viz$seminar_map
-}
+include_viz("map_seminars_static.png")
 ```
 
 ### `r h("R\u00e9seau th\u00e9matique", "Thematic Network")`
 
 ```{r thematic-network, fig.cap=h("R\u00e9seau th\u00e9matique des s\u00e9minaires", "Seminar thematic network")}
-if (!is.null(viz$thematic_network)) {
-  viz$thematic_network
-}
+include_viz("network_seminars.png")
 ```
 
 <div class="pg-page-break"></div>
 
 <!-- ======================================================================= -->
-<!-- SECTION 6 : PROJECTS & THESES                                           -->
+<!-- SECTION 7 : PROJECTS & THESES                                           -->
 <!-- ======================================================================= -->
 
 ## `r h("Projets & Th\u00e8ses", "Projects & Theses")` {.pg-section}
@@ -222,22 +245,19 @@ if (!is.null(viz$thematic_network)) {
 ### `r h("Diagramme de Gantt des projets", "Project Gantt Chart")`
 
 ```{r gantt-chart, fig.cap=h("Gantt des projets de recherche", "Research project Gantt chart")}
-if (!is.null(viz$gantt_projects)) {
-  viz$gantt_projects
-}
+include_viz("gantt_projects.png")
 ```
 
 ### `r h("Chronologie des th\u00e8ses", "Thesis Timeline")`
+
 ```{r thesis-timeline, fig.cap=h("Chronologie des directions de th\u00e8se", "Thesis supervision timeline")}
-if (!is.null(viz$thesis_timeline)) {
-  viz$thesis_timeline
-}
+include_viz("timeline_theses.png")
 ```
 
 <div class="pg-page-break"></div>
 
 <!-- ======================================================================= -->
-<!-- SECTION 7 : AWARDS & MEDIA                                              -->
+<!-- SECTION 8 : AWARDS & MEDIA                                              -->
 <!-- ======================================================================= -->
 
 ## `r h("Prix & M\u00e9dias", "Awards & Media")` {.pg-section}
@@ -245,19 +265,13 @@ if (!is.null(viz$thesis_timeline)) {
 ### `r h("Distinctions", "Awards")`
 
 ```{r awards-infographic, fig.cap=h("Infographie des distinctions", "Awards infographic")}
-if (!is.null(viz$awards_infographic)) {
-  viz$awards_infographic
-}
+include_viz("infographic_awards.png")
 ```
 
 ### `r h("Synth\u00e8se m\u00e9diatique", "Media Summary")`
 
-```{r media-summary, results='asis'}
-if (!is.null(viz$media_summary_html)) {
-  cat(viz$media_summary_html)
-} else if (!is.null(viz$media_summary)) {
-  viz$media_summary
-}
+```{r media-summary, fig.cap=h("Synth\u00e8se m\u00e9diatique", "Media summary")}
+include_viz("media_summary.png")
 ```
 
 ---

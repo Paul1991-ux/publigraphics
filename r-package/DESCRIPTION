@@ -1,6 +1,6 @@
 Package: publigraphics
 Title: Visual and Narrative Profiling of Researchers' Scientific Output
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person(
       given  = "Paul",

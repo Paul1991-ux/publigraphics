@@ -253,6 +253,31 @@ generate_publigraphics <- function(author_name,
            "Statistics computed.")
 
     # =========================================================================
+    # STEP 4b: Scientific Influence Index (SII)
+    # =========================================================================
+    cli::cli_h2("Indice d'Influence Scientifique | Scientific Influence Index")
+
+    sii_result <- tryCatch({
+      pg_compute_sii(classified_data)
+    }, error = function(e) {
+      pg_msg("warn",
+             glue::glue("Calcul SII echoue : {conditionMessage(e)}"),
+             glue::glue("SII computation failed: {conditionMessage(e)}"))
+      NULL
+    })
+
+    sii_card_html <- ""
+    if (!is.null(sii_result)) {
+      sii_card_html <- tryCatch(
+        pg_sii_card(sii_result, theme_color = theme_color, lang = language),
+        error = function(e) ""
+      )
+      pg_msg("success",
+             glue::glue("SII = {round(sii_result$sii, 1)} ({sii_result$metadata$level})"),
+             glue::glue("SII = {round(sii_result$sii, 1)} ({sii_result$metadata$level})"))
+    }
+
+    # =========================================================================
     # STEP 5: AI Narrative summaries (optional)
     # =========================================================================
     cli::cli_h2("Narrations IA | AI Narratives")
@@ -354,9 +379,17 @@ generate_publigraphics <- function(author_name,
     template_dest <- fs::path(output_dir, "publigraphics_notebook.Rmd")
     fs::file_copy(template_src, template_dest, overwrite = TRUE)
 
+    # Also copy CSS file(s) alongside the template
+    css_src <- system.file("templates", "publigraphics_base.css",
+                           package = "publigraphics")
+    if (nzchar(css_src) && file.exists(css_src)) {
+      fs::file_copy(css_src, fs::path(output_dir, "publigraphics_base.css"),
+                    overwrite = TRUE)
+    }
+
     pg_msg("success",
-           "Template Rmd copiee dans le repertoire de sortie.",
-           "Rmd template copied to output directory.")
+           "Template Rmd et CSS copies dans le repertoire de sortie.",
+           "Rmd template and CSS copied to output directory.")
 
     # =========================================================================
     # STEP 9: Render with rmarkdown
@@ -373,7 +406,10 @@ generate_publigraphics <- function(author_name,
       summary_table  = summary_tbl,
       narratives     = narratives,
       viz_dir        = as.character(viz_dir),
-      viz_paths      = viz_paths
+      viz_paths      = viz_paths,
+      stats_list     = stats_list,
+      sii_result     = sii_result,
+      sii_card_html  = sii_card_html
     )
 
     html_output <- tryCatch({
@@ -530,6 +566,7 @@ generate_publigraphics <- function(author_name,
       pdf_path         = if (!is.null(final_pdf)) as.character(final_pdf) else NULL,
       html_path        = if (!is.null(final_html)) as.character(final_html) else NULL,
       data             = classified_data,
+      sii_result       = sii_result,
       duration_seconds = as.numeric(elapsed)
     ))
 
@@ -608,7 +645,7 @@ pg_slugify <- function(name) {
 #'
 #' @return A one-row tibble with summary statistics.
 #' @noRd
-pg_stats_banner <- function(data) {
+pg_stats_banner_internal <- function(data) {
 
   tryCatch({
     tibble::tibble(
@@ -832,6 +869,28 @@ pg_generate_all_viz <- function(data, author_name, theme_color,
     pg_msg("warn",
            glue::glue("Graphique media echoue : {conditionMessage(e)}"),
            glue::glue("Media chart failed: {conditionMessage(e)}"))
+  })
+
+  # 13. SII radar chart
+  tryCatch({
+    sii <- pg_compute_sii(data)
+    radar <- pg_sii_radar(sii, theme_color = theme_color, lang = language)
+    save_plot(radar, "sii_radar.png", width = 8, height = 8)
+  }, error = function(e) {
+    pg_msg("warn",
+           glue::glue("Radar SII echoue : {conditionMessage(e)}"),
+           glue::glue("SII radar failed: {conditionMessage(e)}"))
+  })
+
+  # 14. SII evolution chart
+  tryCatch({
+    sii_evo <- pg_compute_sii(data)
+    evo_plot <- pg_sii_evolution(sii_evo, theme_color = theme_color, lang = language)
+    save_plot(evo_plot, "sii_evolution.png", width = 10, height = 6)
+  }, error = function(e) {
+    pg_msg("warn",
+           glue::glue("Evolution SII echouee : {conditionMessage(e)}"),
+           glue::glue("SII evolution failed: {conditionMessage(e)}"))
   })
 
   saved_paths

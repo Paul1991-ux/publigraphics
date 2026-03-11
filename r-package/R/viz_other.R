@@ -699,22 +699,12 @@ pg_map_expertise <- function(data, theme_color = "#1B4F72") {
       return(list(interactive = NULL, static = NULL))
     }
 
-    # -- Geocode locations -----------------------------------------------------
-    geo_df <- tryCatch({
-      expertise |>
-        select("location") |>
-        distinct() |>
-        tidygeocoder::geocode(
-          address = "location",
-          method  = "osm",
-          quiet   = TRUE
-        )
-    }, error = function(e) {
-      pg_msg("warn",
-             glue("G\u00e9ocodage \u00e9chou\u00e9 : {conditionMessage(e)}"),
-             glue("Geocoding failed: {conditionMessage(e)}"))
-      NULL
-    })
+    # -- Geocode locations (using shared cache) --------------------------------
+    loc_df <- expertise |>
+      select("location") |>
+      distinct()
+
+    geo_df <- pg_geocode_cached(loc_df)
 
     if (is.null(geo_df) || nrow(geo_df) == 0L) {
       pg_msg("warn",

@@ -100,6 +100,25 @@ pg_safe_col <- function(df, col, transform = NULL) {
   }
 }
 
+#' Extract cited_by count from note field
+#'
+#' Parses patterns like `cited_by:4200` or `Cited by: 1500` from a character
+#' vector of note values.
+#'
+#' @param note_vec Character vector. Note field values from BibTeX or CSV.
+#'
+#' @return Integer vector of citation counts, `NA_integer_` where not found.
+#' @noRd
+pg_extract_cited_by <- function(note_vec) {
+  ifelse(
+    is.na(note_vec), NA_integer_,
+    {
+      m <- stringr::str_extract(note_vec, "(?i)cited[_ ]?by[: ]+([0-9]+)", group = 1L)
+      as.integer(m)
+    }
+  )
+}
+
 #' Normalise keywords from a raw string
 #'
 #' Splits a comma- or semicolon-separated keyword string into a trimmed
@@ -255,12 +274,9 @@ pg_read_bib_bibtex <- function(path, encoding = "UTF-8") {
   }
 
   # type_raw: the CATEGORY column (bib2df names it CATEGORY)
+  # Strip leading "@" if present so type_raw matches pg_classify() checks
   type_raw <- if ("CATEGORY" %in% names(raw)) {
-    ifelse(
-      grepl("^@", raw[["CATEGORY"]]),
-      tolower(raw[["CATEGORY"]]),
-      paste0("@", tolower(raw[["CATEGORY"]]))
-    )
+    str_to_lower(str_trim(gsub("^@", "", raw[["CATEGORY"]])))
   } else {
     rep(NA_character_, n)
   }
@@ -321,7 +337,7 @@ pg_read_bib_bibtex <- function(path, encoding = "UTF-8") {
     country          = NA_character_,
     institution      = pg_safe_col(raw, "INSTITUTION"),
     note             = pg_safe_col(raw, "NOTE"),
-    cited_by         = NA_integer_,
+    cited_by         = pg_extract_cited_by(pg_safe_col(raw, "NOTE")),
     source           = "bib",
     date_added       = lubridate::today()
   )
