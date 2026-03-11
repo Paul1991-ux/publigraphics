@@ -1,0 +1,95 @@
+Package: publigraphics
+Title: Visual and Narrative Profiling of Researchers' Scientific Output
+Version: 0.1.0
+Authors@R:
+    person(
+      given  = "Paul",
+      family = "Wambo",
+      email  = "paulwambo2@gmail.com",
+      role   = c("aut", "cre"),
+      comment = c(ORCID = "0009-0005-6062-9227")
+    )
+Description:
+    Generates visually impactful, multi-format notebooks (PDF and HTML)
+    summarising the complete scientific trajectory of a researcher in the social
+    sciences. Accepts BibTeX/RIS input files (Zotero, Mendeley exports) and an
+    optional CSV file for non-bibliographic outputs (seminars, funded projects,
+    supervised theses, awards). Produces thematic word clouds with TF-IDF
+    weighting and LDA topic modelling, geographic maps of seminar interventions,
+    co-authorship networks, Gantt charts of funded projects, and AI-generated
+    narrative summaries via the Anthropic Claude API. Designed for individual
+    researchers who wish to document, visualise, and communicate their academic
+    output through a single reproducible command. The MCP companion server
+    'publigraphics-mcp' (distributed separately via npm) enables conversational
+    generation of notebooks through Claude Desktop.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: false
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Language: en-GB
+Depends:
+    R (>= 4.3.0)
+Imports:
+    base64enc,
+    bib2df (>= 1.1.1),
+    cli (>= 3.6.3),
+    colorspace (>= 2.1.0),
+    dplyr (>= 1.1.4),
+    forcats (>= 1.0.0),
+    fs (>= 1.6.4),
+    ggplot2 (>= 3.5.0),
+    ggtext (>= 0.1.2),
+    ggwordcloud (>= 0.6.0),
+    glue (>= 1.7.0),
+    htmltools (>= 0.5.8),
+    htmlwidgets (>= 1.6.4),
+    httr2 (>= 1.0.0),
+    jpeg,
+    jsonlite (>= 1.8.8),
+    leaflet (>= 2.2.0),
+    lubridate (>= 1.9.3),
+    methods,
+    pagedown (>= 0.21),
+    patchwork (>= 1.2.0),
+    purrr (>= 1.0.2),
+    qrcode (>= 0.2.2),
+    readr (>= 2.1.5),
+    rlang (>= 1.1.0),
+    rmarkdown (>= 2.27),
+    scales (>= 1.3.0),
+    showtext (>= 0.9.7),
+    stringr (>= 1.5.1),
+    sysfonts (>= 0.8.9),
+    tibble (>= 3.2.1),
+    tidygeocoder (>= 1.0.5),
+    tidygraph (>= 1.3.0),
+    tidyr (>= 1.3.1),
+    tidytext (>= 0.4.1),
+    topicmodels (>= 0.2.14),
+    webshot2 (>= 0.1.0),
+    wordcloud2 (>= 0.2.1)
+Suggests:
+    covr,
+    digest,
+    ggalt (>= 0.4.0),
+    ggraph (>= 2.2.0),
+    igraph (>= 2.0.0),
+    kableExtra (>= 1.4.0),
+    knitr (>= 1.47),
+    leaflet.extras (>= 1.0.0),
+    pkgdown,
+    readxl,
+    RefManageR (>= 1.4.0),
+    rnaturalearth (>= 1.0.1),
+    rnaturalearthdata (>= 1.0.0),
+    sf (>= 1.0.15),
+    spelling,
+    testthat (>= 3.2.0),
+    viridis (>= 0.6.5),
+    withr
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/Paul1991-ux/publigraphics,
+     https://Paul1991-ux.github.io/publigraphics
+BugReports: https://github.com/Paul1991-ux/publigraphics/issues

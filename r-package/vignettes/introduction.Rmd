@@ -1,0 +1,228 @@
+---
+title: "Introduction to publigraphics"
+author: "Paul Wambo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to publigraphics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Overview
+
+**publigraphics** generates visually impactful, publication-ready notebooks
+(HTML and PDF) that summarise the complete scientific trajectory of a
+researcher in the social sciences. Starting from standard bibliographic
+exports (BibTeX, RIS, or CSV from Zotero, Mendeley, etc.) and an optional
+supplementary CSV for non-bibliographic outputs, the package produces:
+thematic word clouds with TF-IDF weighting, co-authorship networks,
+publication timelines, geographic maps of seminar interventions, Gantt
+charts of funded projects, and AI-generated narrative summaries via the
+Anthropic Claude API.
+
+**Bilingual support**: all labels, messages, and AI narratives can be
+produced in French or English by setting the `lang` (or `language`)
+parameter. The default is French (`"fr"`).
+
+## Installation
+
+You can install the development version of publigraphics from GitHub:
+
+```{r install}
+# install.packages("remotes")
+remotes::install_github("Paul1991-ux/publigraphics")
+```
+
+## Quick start
+
+### Step 1: Load the package
+
+```{r load}
+library(publigraphics)
+```
+
+### Step 2: Read your data
+
+publigraphics ships with demo data based on a selection of publications by
+Esther Duflo. Three files are included under `inst/extdata/`:
+
+- `duflo_articles.bib` -- journal articles in BibTeX format
+- `duflo_books.bib` -- books and book chapters in BibTeX format
+- `duflo_extra.csv` -- supplementary items (seminars, awards, projects)
+
+Use `pg_read_bib()` to import BibTeX (or CSV/XLSX) bibliography files, and
+`pg_read_extra()` for the supplementary CSV:
+
+```{r read-data}
+# Locate the bundled demo files
+bib_articles <- system.file("extdata", "duflo_articles.bib",
+                            package = "publigraphics")
+bib_books    <- system.file("extdata", "duflo_books.bib",
+                            package = "publigraphics")
+extra_csv    <- system.file("extdata", "duflo_extra.csv",
+                            package = "publigraphics")
+
+# Read bibliographic data
+articles <- pg_read_bib(bib_articles)
+books    <- pg_read_bib(bib_books)
+
+# Read supplementary (non-bibliographic) data
+extras   <- pg_read_extra(extra_csv)
+```
+
+Each function returns a standardised tibble with 19 columns (the
+**publigraphics schema**): `pg_id`, `type_raw`, `type_classified`, `title`,
+`authors`, `year`, `journal_or_venue`, `abstract`, `keywords`, `doi`,
+`url`, `isbn`, `city`, `country`, `institution`, `note`, `cited_by`,
+`source`, and `date_added`.
+
+### Step 3: Merge inputs
+
+Combine the bibliographic and supplementary data into a single tibble.
+Duplicates are detected by case-insensitive title comparison and
+automatically removed (the bibliographic entry is preferred because it
+typically carries richer metadata):
+
+```{r merge}
+# Merge articles and books first
+bib_all <- pg_merge_inputs(
+  bib_data   = dplyr::bind_rows(articles, books),
+  extra_data = extras
+)
+
+nrow(bib_all)
+```
+
+### Step 4: Classify productions
+
+`pg_classify()` assigns one of 13 canonical types to each row based on the
+BibTeX entry type and discriminant fields. Types include `article`, `book`,
+`book_chapter`, `seminar`, `conference`, `report`, `thesis_supervised`,
+`patent`, `media`, `project`, `award`, `expertise`, and `other`:
+
+```{r classify}
+classified <- pg_classify(bib_all)
+
+table(classified$type_classified)
+```
+
+### Step 5: Summary table
+
+`pg_summary_table()` aggregates counts, year ranges, and percentages by
+production type, with bilingual labels (French and English):
+
+```{r summary}
+summary_tbl <- pg_summary_table(classified)
+summary_tbl
+```
+
+The resulting tibble contains columns `type_classified`, `label_fr`,
+`label_en`, `n`, `first_year`, `last_year`, and `pct_total`.
+
+## A first visualisation
+
+publigraphics includes a wide range of visualisation functions. Here is an
+example of a publication timeline for articles:
+
+```{r timeline, fig.width = 10, fig.height = 5}
+pg_timeline_articles(classified, theme_color = "#1B4F72")
+```
+
+And a thematic word cloud built from article titles and abstracts using
+TF-IDF weighting:
+
+```{r wordcloud, fig.width = 9, fig.height = 7}
+wc <- pg_wordcloud_articles(classified, theme_color = "#1B4F72")
+wc$plot
+```
+
+All visualisation functions accept a `theme_color` argument (a hex colour
+string) that controls the primary accent colour of the plot. You can also
+use `pg_theme()` and `pg_palette()` to customise the appearance globally
+(see `vignette("advanced_customization")`).
+
+## Generating the full notebook
+
+The main entry point is `generate_publigraphics()`, which orchestrates the
+entire pipeline: data import, classification, statistics, AI narrative
+summaries, all visualisations, cover page, R Markdown rendering, and
+optional PDF conversion.
+
+```{r generate}
+generate_publigraphics(
+  author_name    = "Duflo, Esther",
+  bib_file       = bib_articles,
+  extra_data     = extra_csv,
+  affiliation    = "Massachusetts Institute of Technology",
+  orcid          = "0000-0003-2404-5946",
+  website        = "https://economics.mit.edu/people/faculty/esther-duflo",
+  theme_color    = "#1B4F72",
+  output_formats = c("html", "pdf"),
+  language       = "en",
+  open_after     = TRUE
+)
+```
+
+The function returns an invisible list containing the paths to the
+generated files (`html_path`, `pdf_path`), the classified data tibble, and
+the wall-clock duration of the pipeline.
+
+### Key parameters
+
+| Parameter | Description | Default |
+|:-----------------|:-------------------------------------------|:--------------|
+| `author_name` | Full name of the researcher | (required) |
+| `bib_file` | Path to `.bib`, `.csv`, or `.xlsx` file | (required) |
+| `extra_data` | Path to supplementary CSV (or `NULL`) | `NULL` |
+| `photo` | Path to a JPEG/PNG photo for the cover | `NULL` |
+| `affiliation` | Institutional affiliation | `""` |
+| `orcid` | ORCID identifier | `NULL` |
+| `api_key_claude` | Anthropic API key for AI narratives | `Sys.getenv("ANTHROPIC_API_KEY")` |
+| `theme_color` | Hex colour code for the visual theme | `"#1B4F72"` |
+| `language` | `"fr"` or `"en"` | `"fr"` |
+| `output_formats` | `"html"`, `"pdf"`, or both | `c("pdf", "html")` |
+| `open_after` | Open HTML in browser when done? | `TRUE` |
+
+## Language support
+
+publigraphics is bilingual throughout. Set `language = "fr"` for French or
+`language = "en"` for English. This affects:
+- all CLI progress messages (displayed in both languages by default),
+- the summary table labels (`label_fr` / `label_en`),
+- the cover page labels and footer,
+- AI narrative prompts when using the Anthropic API.
+
+```{r language-example}
+# French notebook (default)
+generate_publigraphics(
+  author_name = "Duflo, Esther",
+  bib_file    = bib_articles,
+  language    = "fr"
+)
+
+# English notebook
+generate_publigraphics(
+  author_name = "Duflo, Esther",
+  bib_file    = bib_articles,
+  language    = "en"
+)
+```
+
+## What's next?
+
+- **Custom themes and palettes**: see `vignette("advanced_customization")`
+- **AI narratives**: set your Anthropic API key to unlock structured
+  narrative summaries for each production
+- **Cover page**: customise the researcher photo, ORCID, LinkedIn link, and
+  QR code
+- **Package website**: <https://Paul1991-ux.github.io/publigraphics>
+- **Source code**: <https://github.com/Paul1991-ux/publigraphics>

@@ -1,0 +1,446 @@
+/* =========================================================================
+   PubliGraphics — Base Stylesheet
+   Premium academic portfolio design
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap');
+
+/* -------------------------------------------------------------------------
+   CSS Custom Properties (Color Palette)
+   ------------------------------------------------------------------------- */
+:root {
+  --pg-theme-color: #1B4F72;
+  --pg-theme-light: #d4e6f1;
+  --pg-theme-dark: #0e2a3d;
+  --pg-accent: #2ecc71;
+  --pg-text-primary: #2c3e50;
+  --pg-text-secondary: #5d6d7e;
+  --pg-text-muted: #95a5a6;
+  --pg-bg-white: #ffffff;
+  --pg-bg-light: #f8f9fa;
+  --pg-bg-card: #fdfdfe;
+  --pg-border-light: #e8ecef;
+  --pg-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --pg-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --pg-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --pg-radius-sm: 4px;
+  --pg-radius-md: 8px;
+  --pg-radius-lg: 12px;
+  --pg-transition: 0.2s ease;
+}
+
+/* -------------------------------------------------------------------------
+   Reset & Base
+   ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 30px 60px;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--pg-text-primary);
+  background-color: var(--pg-bg-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* -------------------------------------------------------------------------
+   Typography
+   ------------------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  color: var(--pg-text-primary);
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2em;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.5em;
+  padding-bottom: 0.4em;
+  border-bottom: 3px solid var(--pg-theme-color);
+  color: var(--pg-theme-color);
+}
+
+h3 {
+  font-size: 1.15em;
+  color: var(--pg-text-secondary);
+  font-weight: 700;
+}
+
+h4 {
+  font-size: 1.05em;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 0.3em;
+}
+
+p {
+  margin: 0 0 0.8em;
+}
+
+a {
+  color: var(--pg-theme-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color var(--pg-transition);
+}
+
+a:hover {
+  border-bottom-color: var(--pg-theme-color);
+}
+
+em {
+  color: var(--pg-text-secondary);
+}
+
+/* -------------------------------------------------------------------------
+   Cover Page
+   ------------------------------------------------------------------------- */
+.pg-cover-page {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 30px;
+}
+
+.pg-cover-page h1 {
+  font-size: 2.8em;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  border: none;
+  margin-bottom: 0.2em;
+}
+
+.pg-cover-page .pg-subtitle {
+  font-size: 1.3em;
+  color: var(--pg-text-secondary);
+  font-weight: 300;
+  margin-bottom: 2em;
+}
+
+/* -------------------------------------------------------------------------
+   Sections
+   ------------------------------------------------------------------------- */
+.pg-section {
+  margin-top: 3em;
+}
+
+/* -------------------------------------------------------------------------
+   Article Card
+   ------------------------------------------------------------------------- */
+.pg-article-card {
+  border-left: 4px solid var(--pg-theme-color);
+  padding: 20px 24px;
+  margin: 15px 0;
+  background-color: var(--pg-bg-card);
+  border-radius: 0 var(--pg-radius-md) var(--pg-radius-md) 0;
+  box-shadow: var(--pg-shadow-sm);
+  transition: box-shadow var(--pg-transition), transform var(--pg-transition);
+}
+
+.pg-article-card:hover {
+  box-shadow: var(--pg-shadow-md);
+  transform: translateY(-1px);
+}
+
+.pg-article-card h4 {
+  color: var(--pg-text-primary);
+  line-height: 1.4;
+}
+
+.pg-article-card p {
+  font-size: 0.92em;
+  color: var(--pg-text-secondary);
+  margin-bottom: 0.3em;
+}
+
+/* -------------------------------------------------------------------------
+   Badge
+   ------------------------------------------------------------------------- */
+.pg-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+  margin-left: 6px;
+  line-height: 1.6;
+}
+
+.pg-badge-outline {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 700;
+  border: 1.5px solid var(--pg-theme-color);
+  color: var(--pg-theme-color);
+  background: transparent;
+  vertical-align: middle;
+  margin-left: 6px;
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------------------
+   Narrative Grid (2-column layout)
+   ------------------------------------------------------------------------- */
+.pg-narrative-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.pg-narrative-item {
+  padding: 10px 14px;
+  border-radius: var(--pg-radius-md);
+  background: var(--pg-bg-light);
+  border: 1px solid var(--pg-border-light);
+  font-size: 0.93em;
+  line-height: 1.6;
+}
+
+.pg-narrative-item strong {
+  display: block;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pg-text-muted);
+  margin-bottom: 2px;
+}
+
+/* -------------------------------------------------------------------------
+   Stats Grid (3-column)
+   ------------------------------------------------------------------------- */
+.pg-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 20px 0 30px;
+}
+
+.pg-stat-card {
+  text-align: center;
+  padding: 15px 10px;
+  background: var(--pg-bg-card);
+  border-radius: var(--pg-radius-md);
+  box-shadow: var(--pg-shadow-sm);
+  border-top: 3px solid var(--pg-theme-color);
+  transition: box-shadow var(--pg-transition), transform var(--pg-transition);
+}
+
+.pg-stat-card:hover {
+  box-shadow: var(--pg-shadow-md);
+  transform: translateY(-2px);
+}
+
+.pg-stat-value {
+  font-size: 2.2em;
+  font-weight: 900;
+  color: var(--pg-theme-color);
+  line-height: 1.1;
+}
+
+.pg-stat-label {
+  font-size: 0.82em;
+  color: var(--pg-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Gallery Grid
+   ------------------------------------------------------------------------- */
+.pg-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.pg-gallery-item {
+  border-radius: var(--pg-radius-md);
+  overflow: hidden;
+  box-shadow: var(--pg-shadow-sm);
+  transition: box-shadow var(--pg-transition), transform var(--pg-transition);
+}
+
+.pg-gallery-item:hover {
+  box-shadow: var(--pg-shadow-lg);
+  transform: translateY(-3px);
+}
+
+.pg-gallery-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pg-gallery-caption {
+  padding: 10px 12px;
+  font-size: 0.88em;
+  background: var(--pg-bg-card);
+}
+
+/* -------------------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------------------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 0.93em;
+}
+
+thead th {
+  background-color: var(--pg-theme-color);
+  color: #fff;
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.88em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--pg-border-light);
+}
+
+tbody tr:nth-child(even) {
+  background-color: var(--pg-bg-light);
+}
+
+tbody tr:hover {
+  background-color: var(--pg-theme-light);
+}
+
+/* -------------------------------------------------------------------------
+   Figures
+   ------------------------------------------------------------------------- */
+figure,
+.figure {
+  margin: 25px 0;
+  text-align: center;
+}
+
+figure img,
+.figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--pg-radius-md);
+  box-shadow: var(--pg-shadow-sm);
+}
+
+figcaption,
+.figure p.caption,
+p.caption {
+  font-size: 0.85em;
+  color: var(--pg-text-muted);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* -------------------------------------------------------------------------
+   Page Break (for paged output)
+   ------------------------------------------------------------------------- */
+.pg-page-break {
+  page-break-after: always;
+  break-after: page;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Utility Classes
+   ------------------------------------------------------------------------- */
+.pg-text-center {
+  text-align: center;
+}
+
+.pg-text-muted {
+  color: var(--pg-text-muted);
+}
+
+.pg-mt-1 { margin-top: 10px; }
+.pg-mt-2 { margin-top: 20px; }
+.pg-mt-3 { margin-top: 30px; }
+.pg-mb-1 { margin-bottom: 10px; }
+.pg-mb-2 { margin-bottom: 20px; }
+
+/* -------------------------------------------------------------------------
+   Responsive: stack to single column on narrow screens
+   ------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  body {
+    padding: 15px 18px 40px;
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.6em;
+  }
+
+  h2 {
+    font-size: 1.25em;
+  }
+
+  .pg-narrative-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pg-gallery-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pg-article-card {
+    padding: 15px 18px;
+  }
+
+  .pg-cover-page {
+    min-height: auto;
+    padding: 40px 15px;
+  }
+
+  .pg-cover-page h1 {
+    font-size: 1.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  .pg-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}

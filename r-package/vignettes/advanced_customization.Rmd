@@ -1,0 +1,426 @@
+---
+title: "Advanced customization"
+author: "Paul Wambo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced customization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This vignette covers advanced customisation options for publigraphics. If
+you are new to the package, start with `vignette("introduction")`.
+
+## Custom themes with `pg_theme()` and `pg_palette()`
+
+Every visualisation produced by publigraphics uses the internal ggplot2
+theme `pg_theme()` and the colour palette generator `pg_palette()`. Both
+are exported and can be used directly in your own plots or overridden
+globally.
+
+### `pg_theme()`
+
+`pg_theme()` returns a publication-ready ggplot2 theme built on top of
+`theme_minimal()`. It loads the Lato font family via `sysfonts` /
+`showtext` and applies clean defaults for titles, gridlines, and margins.
+
+```{r theme-basic}
+library(publigraphics)
+library(ggplot2)
+
+# Default theme
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point() +
+  pg_theme()
+
+# Custom base size and accent colour
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point(colour = "#E74C3C") +
+  pg_theme(base_size = 14, base_color = "#E74C3C")
+```
+
+**Parameters**:
+
+| Argument | Description | Default |
+|:------------|:--------------------------------------|:------------|
+| `base_size` | Base font size in points | `12` |
+| `base_color`| Hex colour for titles and accents | `"#1B4F72"` |
+
+To set `pg_theme()` as the default for all subsequent plots in a session:
+
+```{r theme-set}
+theme_set(pg_theme(base_color = "#2E86C1"))
+```
+
+### `pg_palette()`
+
+`pg_palette()` generates a vector of `n` hex colour codes derived from a
+base colour using the `colorspace` package. Three palette types are
+available:
+
+- **sequential**: a gradient from dark to light (good for continuous data)
+- **diverging**: two hues spreading from a neutral centre
+- **qualitative**: distinct hues for categorical data
+
+```{r palette-examples}
+# 5 sequential colours from a deep blue base
+pg_palette("#1B4F72", n = 5, type = "sequential")
+
+# 4 qualitative colours from a red base
+pg_palette("#E74C3C", n = 4, type = "qualitative")
+
+# 7 diverging colours
+pg_palette("#27AE60", n = 7, type = "diverging")
+```
+
+You can use these palettes with `scale_colour_manual()` or
+`scale_fill_manual()` in any ggplot:
+
+```{r palette-use}
+pal <- pg_palette("#1B4F72", n = 3, type = "qualitative")
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width, colour = Species)) +
+  geom_point(size = 2) +
+  scale_colour_manual(values = pal) +
+  pg_theme()
+```
+
+## Using your own data
+
+The demo data shipped with publigraphics (Esther Duflo's publications)
+is useful for testing, but you will typically want to use your own
+bibliographic records.
+
+### BibTeX from Zotero or Mendeley
+
+Export your library as a `.bib` file from Zotero (File > Export Library >
+BibTeX) or Mendeley (Tools > Export > BibTeX). Then pass the path to
+`pg_read_bib()`:
+```{r own-bib}
+my_refs <- pg_read_bib("path/to/my_library.bib")
+```
+
+### CSV or XLSX files
+
+If your data is in a spreadsheet, export it as CSV. Column names are
+matched case-insensitively to the publigraphics schema. The most important
+columns are:
+
+| Column | Required? | Description |
+|:-----------------|:----------|:--------------------------------------|
+| `title` | Yes | Title of the publication |
+| `year` | Yes | Publication year (integer) |
+| `authors` | Yes | Author names (semicolon-separated) |
+| `type_raw` | Recommended | BibTeX entry type or free text |
+| `journal` | Optional | Journal name or venue |
+| `abstract` | Optional | Abstract text (used for word clouds) |
+| `keywords` | Optional | Comma-separated keywords |
+| `doi` | Optional | Digital Object Identifier |
+
+```{r own-csv}
+my_refs <- pg_read_bib("path/to/my_publications.csv")
+```
+
+### Supplementary CSV for non-bibliographic outputs
+
+For items not captured in standard bibliographic databases (seminars,
+funded projects, supervised theses, awards, consulting), create a CSV with
+at least the columns `type`, `title`, and `year`:
+
+```{r own-extra}
+my_extras <- pg_read_extra("path/to/my_extras.csv")
+```
+
+Expected columns include: `type` (e.g. "seminar", "project", "award"),
+`title`, `year`, `city`, `country`, `institution`, `note`,
+`funding_amount`, and `funding_source`. Missing columns default to `NA`.
+
+### Full pipeline with your own data
+
+```{r own-pipeline}
+library(publigraphics)
+
+refs   <- pg_read_bib("my_library.bib")
+extras <- pg_read_extra("my_extras.csv")
+
+generate_publigraphics(
+  author_name    = "Lastname, Firstname",
+  bib_file       = "my_library.bib",
+  extra_data     = "my_extras.csv",
+  photo          = "my_photo.jpg",
+  affiliation    = "My University",
+  orcid          = "0000-0000-0000-0000",
+  website        = "https://mywebsite.com",
+  theme_color    = "#2E86C1",
+  language       = "en",
+  output_formats = c("html", "pdf")
+)
+```
+
+## AI narrative generation
+
+publigraphics can generate structured narrative summaries for each
+production using the Anthropic Claude API. These narratives are
+automatically included in the notebook when an API key is available.
+
+### Setting up your API key
+
+Set the `ANTHROPIC_API_KEY` environment variable before calling the
+pipeline. The recommended approach is to add it to your `.Renviron` file:
+
+```{r api-key-renviron}
+# In your .Renviron file (edit with usethis::edit_r_environ()):
+# ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxx
+```
+
+Alternatively, pass the key directly:
+
+```{r api-key-direct}
+generate_publigraphics(
+  author_name  = "Lastname, Firstname",
+  bib_file     = "my_library.bib",
+  api_key_claude = "sk-ant-api03-xxxxxxxxxxxx",
+  language     = "fr"
+)
+```
+
+### Calling `pg_run_all_narratives()` directly
+
+If you want finer control over narrative generation, you can call the
+function directly on a classified dataset:
+
+```{r narratives-direct}
+library(publigraphics)
+
+data <- pg_read_bib("my_library.bib") |>
+  pg_merge_inputs() |>
+  pg_classify()
+
+enriched <- pg_run_all_narratives(
+  data      = data,
+  api_key   = Sys.getenv("ANTHROPIC_API_KEY"),
+  lang      = "en",
+  max_items = 10
+)
+```
+
+The function adds six columns to the tibble:
+
+| Column | Description |
+|:--------------------------------|:------------------------------------------|
+| `narrative_problematique` | Research question or central theme |
+| `narrative_pertinence` | Importance and context |
+| `narrative_resultat` | Main findings or contribution |
+| `narrative_question_ouverte` | Open question for further reflection |
+| `narrative_lang` | Language code used for generation |
+| `narrative_cached` | Whether the result was loaded from cache |
+
+### Caching
+
+To avoid redundant API calls on re-runs, pass a `cache_dir`:
+
+```{r narratives-cache}
+enriched <- pg_run_all_narratives(
+  data      = data,
+  api_key   = Sys.getenv("ANTHROPIC_API_KEY"),
+  lang      = "fr",
+  cache_dir = "narrative_cache"
+)
+```
+
+Each result is keyed by a hash of `pg_id`, `abstract`, and `lang`. On
+subsequent runs, cached results are loaded from `.rds` files instead of
+calling the API.
+
+### Controlling the scope
+
+Use the `types_to_process` and `max_items` arguments to limit which
+productions receive narratives:
+
+```{r narratives-scope}
+enriched <- pg_run_all_narratives(
+  data             = data,
+  api_key          = Sys.getenv("ANTHROPIC_API_KEY"),
+  lang             = "en",
+  types_to_process = c("article", "book"),
+  max_items        = 5
+)
+```
+
+## Customising the cover page
+
+The cover page is built by `pg_build_cover()`, which generates a
+self-contained HTML string with a two-column CSS Grid layout: a coloured
+left accent band and a right content area with the researcher's photo,
+name, affiliation, social links, a statistics grid, and an optional QR
+code.
+
+### Basic usage
+
+```{r cover-basic}
+cover_html <- pg_build_cover(
+  author_name = "Marie Dupont",
+  affiliation = "Universite de Paris",
+  photo_path  = "photo.jpg",
+  orcid       = "0000-0001-2345-6789",
+  linkedin    = "https://linkedin.com/in/mariedupont",
+  website     = "https://mariedupont.fr",
+  stats       = list(
+    Articles = 24, Books = 3, Seminars = 15,
+    Theses = 8, Awards = 2, Projects = 5
+  ),
+  theme_color = "#1B4F72",
+  lang        = "fr"
+)
+
+# Preview in browser
+htmltools::browsable(htmltools::HTML(cover_html))
+```
+
+### Cover parameters
+
+| Parameter | Description |
+|:--------------|:------------------------------------------------------|
+| `author_name` | Full researcher name (displayed prominently) |
+| `affiliation` | Institution name |
+| `photo_path` | Path to JPEG/PNG photo (or `NULL` for initials) |
+| `orcid` | ORCID identifier (displayed as clickable link) |
+| `linkedin` | LinkedIn profile URL |
+| `website` | Personal website URL (generates a QR code) |
+| `stats` | Named list with 6 elements: Articles, Books, Seminars, Theses, Awards, Projects |
+| `theme_color` | Hex colour for the accent band and headings |
+| `lang` | `"fr"` or `"en"` for label language |
+
+### Photo handling
+
+When `photo_path` is provided, the image is embedded as a base64 data URI
+to keep the output self-contained. When `NULL`, an initials placeholder
+(a coloured circle with the researcher's initials) is generated
+automatically from `author_name`.
+
+### Changing the accent colour
+
+The left accent band uses a gradient from `theme_color` to a darker shade
+computed via `colorspace::darken()`. Changing `theme_color` affects the
+entire visual identity of both the cover and the notebook:
+
+```{r cover-colour}
+# A warm red theme
+cover_red <- pg_build_cover(
+  author_name = "Marie Dupont",
+  affiliation = "Universite de Paris",
+  stats       = list(
+    Articles = 24, Books = 3, Seminars = 15,
+    Theses = 8, Awards = 2, Projects = 5
+  ),
+  theme_color = "#C0392B",
+  lang        = "en"
+)
+```
+
+## Custom CSS for the notebook
+
+The rendered notebook is an HTML document. You can inject custom CSS to
+override styling by creating a CSS file and referencing it in your
+workflow. For example, to change heading fonts or the page background:
+```{r custom-css}
+# Create a custom CSS file
+css_content <- "
+/* Custom publigraphics overrides */
+body {
+  font-family: 'Georgia', serif;
+  background-color: #FAFAFA;
+}
+
+h1, h2, h3 {
+  font-family: 'Montserrat', sans-serif;
+  color: #2C3E50;
+}
+
+.pg-stat-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Narrower page margins for print */
+@media print {
+  body {
+    margin: 1cm;
+  }
+}
+"
+writeLines(css_content, "my_custom_styles.css")
+```
+
+You can include this CSS file in the R Markdown output by adding it to
+the YAML header of a custom template or by injecting it via
+`htmltools::tags$style()` in a setup chunk.
+
+## Combining multiple BibTeX files
+
+If your publications are split across several BibTeX files (e.g., one
+from Zotero and one from Google Scholar), you can read them separately and
+merge:
+
+```{r multi-bib}
+refs_zotero <- pg_read_bib("zotero_export.bib")
+refs_scholar <- pg_read_bib("scholar_export.bib")
+
+# Combine and deduplicate
+all_refs <- pg_merge_inputs(
+  bib_data = dplyr::bind_rows(refs_zotero, refs_scholar)
+)
+```
+
+`pg_merge_inputs()` automatically removes duplicates based on normalised
+title comparison. The first occurrence (from the first data frame) is
+retained.
+
+## Controlling the visual theme globally
+
+For a consistent look across an entire analysis session, set the theme and
+palette globally:
+
+```{r global-theme}
+library(publigraphics)
+library(ggplot2)
+
+# Set the publigraphics theme as default
+theme_set(pg_theme(base_size = 13, base_color = "#8E44AD"))
+
+# All subsequent ggplots use this theme automatically
+ggplot(mtcars, aes(hp, mpg, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_colour_manual(
+    values = pg_palette("#8E44AD", n = 3, type = "qualitative")
+  ) +
+  labs(title = "Example with custom purple theme")
+```
+
+## Summary of key functions
+
+| Function | Purpose |
+|:-------------------------------|:----------------------------------------------|
+| `pg_read_bib()` | Read BibTeX / CSV / XLSX bibliography files |
+| `pg_read_extra()` | Read supplementary CSV |
+| `pg_merge_inputs()` | Merge and deduplicate data |
+| `pg_classify()` | Classify productions into 13 types |
+| `pg_summary_table()` | Aggregated summary with bilingual labels |
+| `pg_theme()` | Publication-ready ggplot2 theme |
+| `pg_palette()` | Colour palette generator |
+| `pg_build_cover()` | HTML cover page |
+| `pg_run_all_narratives()` | AI narrative summaries (Anthropic API) |
+| `generate_publigraphics()` | Full pipeline: data to notebook |
+
+For further details on each function, consult the package reference
+documentation with `?function_name` or visit the pkgdown site at
+<https://Paul1991-ux.github.io/publigraphics>.

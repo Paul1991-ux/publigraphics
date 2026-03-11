@@ -1,0 +1,86 @@
+url: https://paul1991-ux.github.io/publigraphics/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: Getting started
+          href: articles/introduction.html
+        - text: Advanced customization
+          href: articles/advanced-customization.html
+
+reference:
+  - title: Data Import
+    desc: Read and merge bibliographic data from BibTeX, RIS, or CSV files.
+    contents:
+      - pg_read_bib
+      - pg_read_extra
+      - pg_merge_inputs
+
+  - title: Classification
+    desc: Classify productions into 12 academic types and summarise results.
+    contents:
+      - pg_classify
+      - pg_summary_table
+
+  - title: Visualisation - Articles
+    desc: Word clouds, timelines, and highlight cards for journal articles.
+    contents:
+      - pg_wordcloud_articles
+      - pg_timeline_articles
+      - pg_card_article
+
+  - title: Visualisation - Seminars
+    desc: Geographic maps and network graphs for seminars and conferences.
+    contents:
+      - pg_map_seminars
+      - pg_network_seminars
+
+  - title: Visualisation - Books
+    desc: Book gallery, co-authorship networks, and thematic word clouds.
+    contents:
+      - pg_gallery_books
+      - pg_network_coauthors
+      - pg_wordcloud_books
+
+  - title: Visualisation - Other
+    desc: Gantt charts, thesis timelines, awards, expertise maps, and media.
+    contents:
+      - pg_gantt_projects
+      - pg_timeline_theses
+      - pg_infographic_awards
+      - pg_map_expertise
+      - pg_media_summary
+
+  - title: Global Overview
+    desc: Radar charts, cumulative curves, and summary banners.
+    contents:
+      - pg_radar_productions
+      - pg_curve_timeline
+      - pg_stats_banner
+
+  - title: AI Narratives
+    desc: Generate section narratives using the Claude API.
+    contents:
+      - pg_run_all_narratives
+      - pg_check_api_key
+
+  - title: Notebook Generation
+    desc: Build the full portfolio notebook with cover page.
+    contents:
+      - generate_publigraphics
+      - pg_build_cover
+
+  - title: Themes & Palettes
+    desc: Custom ggplot2 themes and colour palettes.
+    contents:
+      - pg_theme
+      - pg_palette

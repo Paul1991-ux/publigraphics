@@ -1,0 +1,267 @@
+---
+title: "`r params$author_name` — PubliGraphics"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: null
+    highlight: null
+    css: ["publigraphics_base.css"]
+    self_contained: true
+    toc: false
+    fig_caption: true
+    df_print: kable
+  pagedown::html_paged:
+    css: ["publigraphics_base.css", "publigraphics_print.css"]
+    self_contained: true
+params:
+  author_name: ""
+  data: NULL
+  viz_list: NULL
+  stats: NULL
+  cover_html: ""
+  theme_color: "#1B4F72"
+  lang: "fr"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  fig.width = 9,
+  fig.height = 6,
+  dpi = 150,
+  out.width = "100%"
+)
+
+# --- Bilingual header helper ------------------------------------------------
+h <- function(fr, en) {
+
+  if (identical(params$lang, "fr")) fr else en
+}
+
+# --- Unpack parameters -------------------------------------------------------
+viz    <- params$viz_list
+stats  <- params$stats
+data   <- params$data
+color  <- params$theme_color
+```
+
+```{css, echo=FALSE}
+:root {
+  --pg-theme-color: `r params$theme_color`;
+}
+```
+
+<!-- ======================================================================= -->
+<!-- SECTION 1 : COVER PAGE                                                  -->
+<!-- ======================================================================= -->
+
+<div class="pg-cover-page">
+`r params$cover_html`
+</div>
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 2 : OVERVIEW                                                    -->
+<!-- ======================================================================= -->
+
+## `r h("Vue d'ensemble", "Overview")` {.pg-section}
+
+<div class="pg-stats-grid">
+```{r stats-cards, results='asis'}
+if (!is.null(stats)) {
+  labels <- if (identical(params$lang, "fr")) {
+    c("Articles", "Ouvrages", "S\u00e9minaires", "Projets", "Th\u00e8ses", "Prix")
+  } else {
+    c("Articles", "Books", "Seminars", "Projects", "Theses", "Awards")
+  }
+  values <- c(
+    stats$n_articles, stats$n_books, stats$n_seminars,
+    stats$n_projects, stats$n_theses, stats$n_awards
+  )
+  for (i in seq_along(labels)) {
+    cat(sprintf(
+      '<div class="pg-stat-card" style="border-top: 3px solid %s;">
+         <div class="pg-stat-value">%s</div>
+         <div class="pg-stat-label">%s</div>
+       </div>\n',
+      color, values[i], labels[i]
+    ))
+  }
+}
+```
+</div>
+
+### `r h("Profil de recherche", "Research Profile")`
+
+```{r radar-chart, fig.cap=h("Radar du profil acad\u00e9mique", "Academic profile radar")}
+if (!is.null(viz$radar)) {
+  viz$radar
+}
+```
+
+### `r h("\u00c9volution temporelle", "Temporal Evolution")`
+
+```{r temporal-evolution, fig.cap=h("\u00c9volution des publications", "Publication evolution")}
+if (!is.null(viz$temporal_evolution)) {
+  viz$temporal_evolution
+}
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 3 : ARTICLES                                                    -->
+<!-- ======================================================================= -->
+
+## `r h("Articles", "Articles")` {.pg-section}
+
+### `r h("Nuage de mots-cl\u00e9s", "Keyword Cloud")`
+
+```{r wordcloud, fig.cap=h("Mots-cl\u00e9s des articles", "Article keywords")}
+if (!is.null(viz$wordcloud)) {
+  viz$wordcloud
+}
+```
+
+### `r h("Chronologie des articles", "Article Timeline")`
+
+```{r article-timeline, fig.cap=h("Chronologie des publications", "Publication timeline")}
+if (!is.null(viz$article_timeline)) {
+  viz$article_timeline
+}
+```
+
+### `r h("Top 5 des articles", "Top 5 Articles")`
+
+```{r top-articles, results='asis'}
+if (!is.null(data$articles)) {
+  top5 <- head(data$articles, 5)
+  for (i in seq_len(nrow(top5))) {
+    row <- top5[i, ]
+    year_badge <- sprintf(
+      '<span class="pg-badge" style="background-color: %s; color: #fff;">%s</span>',
+      color, row$year
+    )
+    journal_text <- if (!is.null(row$journal) && nchar(row$journal) > 0) {
+      sprintf('<em>%s</em>', row$journal)
+    } else {
+      ""
+    }
+    cat(sprintf(
+      '<div class="pg-article-card" style="border-left-color: %s;">
+         <h4>%s %s</h4>
+         <p>%s</p>
+         <p>%s</p>
+       </div>\n',
+      color, row$title, year_badge, row$authors, journal_text
+    ))
+  }
+}
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 4 : BOOKS                                                       -->
+<!-- ======================================================================= -->
+
+## `r h("Ouvrages", "Books")` {.pg-section}
+
+### `r h("Galerie des ouvrages", "Book Gallery")`
+
+```{r book-gallery, fig.cap=h("Galerie des ouvrages", "Book gallery")}
+if (!is.null(viz$book_gallery)) {
+  viz$book_gallery
+}
+```
+
+### `r h("R\u00e9seau de co-autorat", "Co-authorship Network")`
+
+```{r coauthorship-network, fig.cap=h("R\u00e9seau de co-autorat", "Co-authorship network")}
+if (!is.null(viz$coauthorship_network)) {
+  viz$coauthorship_network
+}
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 5 : SEMINARS                                                    -->
+<!-- ======================================================================= -->
+
+## `r h("S\u00e9minaires & Conf\u00e9rences", "Seminars & Conferences")` {.pg-section}
+
+### `r h("Carte des interventions", "Presentation Map")`
+
+```{r seminar-map, fig.cap=h("Localisation des s\u00e9minaires", "Seminar locations")}
+if (!is.null(viz$seminar_map)) {
+  viz$seminar_map
+}
+```
+
+### `r h("R\u00e9seau th\u00e9matique", "Thematic Network")`
+
+```{r thematic-network, fig.cap=h("R\u00e9seau th\u00e9matique des s\u00e9minaires", "Seminar thematic network")}
+if (!is.null(viz$thematic_network)) {
+  viz$thematic_network
+}
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 6 : PROJECTS & THESES                                           -->
+<!-- ======================================================================= -->
+
+## `r h("Projets & Th\u00e8ses", "Projects & Theses")` {.pg-section}
+
+### `r h("Diagramme de Gantt des projets", "Project Gantt Chart")`
+
+```{r gantt-chart, fig.cap=h("Gantt des projets de recherche", "Research project Gantt chart")}
+if (!is.null(viz$gantt_projects)) {
+  viz$gantt_projects
+}
+```
+
+### `r h("Chronologie des th\u00e8ses", "Thesis Timeline")`
+```{r thesis-timeline, fig.cap=h("Chronologie des directions de th\u00e8se", "Thesis supervision timeline")}
+if (!is.null(viz$thesis_timeline)) {
+  viz$thesis_timeline
+}
+```
+
+<div class="pg-page-break"></div>
+
+<!-- ======================================================================= -->
+<!-- SECTION 7 : AWARDS & MEDIA                                              -->
+<!-- ======================================================================= -->
+
+## `r h("Prix & M\u00e9dias", "Awards & Media")` {.pg-section}
+
+### `r h("Distinctions", "Awards")`
+
+```{r awards-infographic, fig.cap=h("Infographie des distinctions", "Awards infographic")}
+if (!is.null(viz$awards_infographic)) {
+  viz$awards_infographic
+}
+```
+
+### `r h("Synth\u00e8se m\u00e9diatique", "Media Summary")`
+
+```{r media-summary, results='asis'}
+if (!is.null(viz$media_summary_html)) {
+  cat(viz$media_summary_html)
+} else if (!is.null(viz$media_summary)) {
+  viz$media_summary
+}
+```
+
+---
+
+<div style="text-align: center; padding: 30px 0; color: #888; font-size: 0.85em;">
+`r h("G\u00e9n\u00e9r\u00e9 avec", "Generated with")` <strong>PubliGraphics</strong> `r packageVersion("publigraphics")` — `r format(Sys.time(), '%d %B %Y')`
+</div>
